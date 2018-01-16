@@ -17,9 +17,9 @@ void HelloHandler::onRequest(std::unique_ptr<HTTPMessage> headers) noexcept {}
 void HelloHandler::onBody(std::unique_ptr<folly::IOBuf> body) noexcept {}
 
 void HelloHandler::onEOM() noexcept {
-  auto eventBase = folly::EventBaseManager::get()->getExistingEventBase();
-  add(1, 2).via(cpuPool_).then([this, eventBase](int result) {
-    eventBase->runInEventBaseThread([this, result]() {
+  auto evb = folly::EventBaseManager::get()->getEventBase();
+  add(1, 2).via(cpuPool_).then([this, evb](int result) {
+    evb->runInEventBaseThread([this, result]() {
       ResponseBuilder(downstream_)
         .status(200, "OK")
         .header("Hihi", "Hehe")
