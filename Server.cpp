@@ -24,8 +24,6 @@ public:
   void onServerStop() noexcept override {}
 
   RequestHandler *onRequest(RequestHandler *, HTTPMessage *) noexcept override {
-    // TODO(dio): is passing around smart pointer, in this case std::unique_ptr,
-    // preferrable?
     return new HelloHandler(cpuPool_.get());
   }
 
