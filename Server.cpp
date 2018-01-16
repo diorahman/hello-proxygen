@@ -34,7 +34,7 @@ protected:
 };
 
 int main(int argc, char *argv[]) {
-  int threads = sysconf(_SC_NPROCESSORS_ONLN);
+  size_t threads = sysconf(_SC_NPROCESSORS_ONLN);
 
   std::vector<HTTPServer::IPConfig> IPs = {
       {folly::SocketAddress("localhost", 3000, true),
@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
   options.enableContentCompression = false;
   options.handlerFactories =
       RequestHandlerChain()
-          .addThen<HelloHandlerFactory>(sysconf(_SC_NPROCESSORS_ONLN))
+          .addThen<HelloHandlerFactory>(threads)
           .build();
 
   HTTPServer server(std::move(options));
