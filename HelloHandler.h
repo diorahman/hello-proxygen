@@ -1,6 +1,7 @@
 #pragma once
 
 #include <folly/Memory.h>
+#include <folly/futures/Future.h>
 #include <proxygen/httpserver/RequestHandler.h>
 
 using namespace proxygen;
@@ -20,6 +21,7 @@ public:
 
 private:
   std::unique_ptr<folly::IOBuf> body_;
+  folly::Future<int> add(int x, int y);
 };
 
 } // namespace hello
