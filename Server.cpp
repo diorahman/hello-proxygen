@@ -1,6 +1,7 @@
 #include <unistd.h>
 
 #include <folly/Memory.h>
+#include <folly/executors/IOThreadPoolExecutor.h>
 #include <folly/io/async/EventBaseManager.h>
 
 #include <proxygen/httpserver/HTTPServer.h>
@@ -13,13 +14,23 @@ using namespace hello;
 
 class HelloHandlerFactory : public RequestHandlerFactory {
 public:
+  HelloHandlerFactory(size_t size)
+      : cpuPool_(std::make_unique<folly::CPUThreadPoolExecutor>(size)) {}
+
+  ~HelloHandlerFactory() {}
+
   void onServerStart(folly::EventBase *evb) noexcept override {}
 
   void onServerStop() noexcept override {}
 
   RequestHandler *onRequest(RequestHandler *, HTTPMessage *) noexcept override {
-    return new HelloHandler();
+    // TODO(dio): is passing around smart pointer, in this case std::unique_ptr,
+    // preferrable?
+    return new HelloHandler(cpuPool_.get());
   }
+
+protected:
+  std::unique_ptr<folly::CPUThreadPoolExecutor> cpuPool_;
 };
 
 int main(int argc, char *argv[]) {
@@ -35,7 +46,9 @@ int main(int argc, char *argv[]) {
   options.shutdownOn = {SIGINT, SIGTERM};
   options.enableContentCompression = false;
   options.handlerFactories =
-      RequestHandlerChain().addThen<HelloHandlerFactory>().build();
+      RequestHandlerChain()
+          .addThen<HelloHandlerFactory>(sysconf(_SC_NPROCESSORS_ONLN))
+          .build();
 
   HTTPServer server(std::move(options));
   server.bind(IPs);
